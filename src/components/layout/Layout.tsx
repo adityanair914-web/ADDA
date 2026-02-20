@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Heart, Users, Calendar, Briefcase, User, Menu, X, LayoutDashboard } from 'lucide-react';
+import { Home, Heart, Users, Calendar, Briefcase, User, Menu, X, LayoutDashboard, LogOut, LogIn } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { supabase } from '../../lib/supabase';
 import clsx from 'clsx';
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children, session }: { children: React.ReactNode, session: any }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -54,12 +55,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               })}
             </div>
 
-            <div className="hidden md:flex md:items-center">
-              <Link to="/profile" className="p-2 text-slate-400 hover:text-slate-500">
-                <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
-                  <User className="w-5 h-5 text-slate-500" />
-                </div>
-              </Link>
+            <div className="hidden md:flex md:items-center gap-4">
+              {session ? (
+                <>
+                  <Link to="/profile" className="p-2 text-slate-400 hover:text-slate-500">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center overflow-hidden">
+                      <User className="w-5 h-5 text-slate-500" />
+                    </div>
+                  </Link>
+                  <button
+                    onClick={() => supabase.auth.signOut()}
+                    className="p-2 text-slate-400 hover:text-red-500 transition-colors"
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="bg-slate-900 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-800 transition flex items-center"
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Sign In
+                </Link>
+              )}
             </div>
 
             {/* Mobile menu button */}

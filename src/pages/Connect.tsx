@@ -38,8 +38,7 @@ export default function Connect() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Mock sender ID for now
-      await api.postConfession({ ...formData, sender_id: 'mock-user-id' });
+      await api.postConfession(formData);
       alert('Confession sent for approval!');
       setFormData({ recipient_name: '', message: '', vibe_type: 'crush', is_anonymous: true });
       setActiveTab('feed');

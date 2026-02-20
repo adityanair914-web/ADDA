@@ -1,21 +1,10 @@
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  instagram_handle?: string;
-  department?: string;
-  year?: string;
-  bio?: string;
-  interests: string[];
-  looking_for: string[];
-  profile_pic_url?: string;
-  user_type: 'student' | 'club_admin' | 'organizer' | 'super_admin';
-}
+import { supabase } from './supabase';
 
 export interface Confession {
   id: string;
   sender_id: string;
   recipient_name: string;
+  recipient_instagram?: string;
   message: string;
   vibe_type: string;
   is_anonymous: boolean;
@@ -33,6 +22,8 @@ export interface Club {
   cover_image_url: string;
   logo_url: string;
   member_count: number;
+  approval_status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
 }
 
 export interface Event {
@@ -41,129 +32,191 @@ export interface Event {
   description: string;
   organizer_id: string;
   club_id?: string;
-  club_name?: string;
   event_type: string;
   date_time: string;
   location: string;
   cover_image_url: string;
-}
-
-export interface Gig {
-  id: string;
-  title: string;
-  description: string;
-  pay_amount: string;
-  gig_type: string;
-  location: string;
-  posted_by: string;
-  status: 'open' | 'filled' | 'closed';
-}
-
-export interface Stats {
-  users: number;
-  clubs: number;
-  events: number;
+  created_at: string;
+  club_name?: string;
 }
 
 export const api = {
-  getMe: async (): Promise<User> => {
-    const res = await fetch('/api/users/me');
-    return res.json();
+  // Users
+  getCurrentUser: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+    return data;
   },
-  getConfessions: async (): Promise<Confession[]> => {
-    const res = await fetch('/api/confessions');
-    return res.json();
+
+  // Confessions
+  getConfessions: async () => {
+    const { data, error } = await supabase
+      .from('confessions')
+      .select('*')
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
   },
-  postConfession: async (data: Partial<Confession>) => {
-    const res = await fetch('/api/confessions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return res.json();
+
+  postConfession: async (confession: Partial<Confession>) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('confessions')
+      .insert([{ ...confession, sender_id: user?.id, status: 'pending' }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
-  getClubs: async (): Promise<Club[]> => {
-    const res = await fetch('/api/clubs');
-    return res.json();
+
+  // Bouquets
+  getBouquets: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data, error } = await supabase
+      .from('bouquets')
+      .select('*')
+      .eq('recipient_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
   },
-  getClub: async (id: string): Promise<Club> => {
-    const res = await fetch(`/api/clubs/${id}`);
-    return res.json();
+
+  postBouquet: async (bouquet: any) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data, error } = await supabase
+      .from('bouquets')
+      .insert([{ ...bouquet, sender_id: user?.id }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
-  getEvents: async (): Promise<Event[]> => {
-    const res = await fetch('/api/events');
-    return res.json();
+
+  // Clubs
+  getClubs: async () => {
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('*')
+      .order('member_count', { ascending: false });
+    if (error) throw error;
+    return data;
   },
-  getGigs: async (): Promise<Gig[]> => {
-    const res = await fetch('/api/gigs');
-    return res.json();
+
+  createClub: async (club: Partial<Club>) => {
+    const { data, error } = await supabase
+      .from('clubs')
+      .insert([{ ...club, approval_status: 'pending' }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
-  getBouquets: async (): Promise<any[]> => {
-    const res = await fetch('/api/bouquets');
-    return res.json();
+
+  // Events
+  getEvents: async () => {
+    const { data, error } = await supabase
+      .from('events')
+      .select(`
+        *,
+        clubs ( name )
+      `)
+      .order('date_time', { ascending: true });
+    if (error) throw error;
+    return data.map((e: any) => ({ ...e, club_name: e.clubs?.name }));
   },
-  postBouquet: async (data: { sender_id: string; recipient_id: string; message: string }) => {
-    const res = await fetch('/api/bouquets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return res.json();
+
+  createEvent: async (event: Partial<Event>) => {
+    const { data, error } = await supabase
+      .from('events')
+      .insert([event])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
-  getPendingConfessions: async (): Promise<Confession[]> => {
-    const res = await fetch('/api/admin/pending-confessions');
-    return res.json();
+
+  // Gigs
+  getGigs: async () => {
+    const { data, error } = await supabase
+      .from('gigs')
+      .select('*')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
   },
+
+  applyForGig: async (gigId: string, application: { user_id: string; upi_id: string; proof_url: string }) => {
+    const { data, error } = await supabase
+      .from('gig_applications')
+      .insert([{ ...application, gig_id: gigId }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  // Admin
+  getPendingConfessions: async () => {
+    const { data, error } = await supabase
+      .from('confessions')
+      .select('*')
+      .eq('status', 'pending');
+    if (error) throw error;
+    return data;
+  },
+
   moderateConfession: async (id: string, status: 'approved' | 'rejected') => {
-    const res = await fetch(`/api/admin/confessions/${id}/moderate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    return res.json();
+    const { error } = await supabase
+      .from('confessions')
+      .update({ status })
+      .eq('id', id);
+    if (error) throw error;
   },
-  getPendingClubs: async (): Promise<Club[]> => {
-    const res = await fetch('/api/admin/pending-clubs');
-    return res.json();
+
+  getPendingClubs: async () => {
+    const { data, error } = await supabase
+      .from('clubs')
+      .select('*')
+      .eq('approval_status', 'pending');
+    if (error) throw error;
+    return data;
   },
+
   moderateClub: async (id: string, status: 'approved' | 'rejected') => {
-    const res = await fetch(`/api/admin/clubs/${id}/moderate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    return res.json();
+    const { error } = await supabase
+      .from('clubs')
+      .update({ approval_status: status })
+      .eq('id', id);
+    if (error) throw error;
   },
-  createClub: async (data: Partial<Club>) => {
-    const res = await fetch('/api/clubs', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return res.json();
+
+  // Feed & Stats
+  getFeed: async () => {
+    const [confRes, clubRes, eventRes] = await Promise.all([
+      supabase.from('confessions').select('id, message, created_at').eq('status', 'approved').limit(10),
+      supabase.from('clubs').select('id, name, created_at').eq('approval_status', 'approved').limit(10),
+      supabase.from('events').select('id, title, created_at').limit(10)
+    ]);
+
+    const confessions = (confRes.data || []).map(c => ({ id: c.id, type: 'confession', content: c.message, created_at: c.created_at }));
+    const clubs = (clubRes.data || []).map(c => ({ id: c.id, type: 'club', content: c.name, created_at: c.created_at }));
+    const events = (eventRes.data || []).map(e => ({ id: e.id, type: 'event', content: e.title, created_at: e.created_at }));
+
+    return [...confessions, ...clubs, ...events].sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
   },
-  createEvent: async (data: Partial<Event>) => {
-    const res = await fetch('/api/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return res.json();
-  },
-  applyForGig: async (gigId: string, data: { user_id: string; proof_url: string; upi_id: string }) => {
-    const res = await fetch(`/api/gigs/${gigId}/apply`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    return res.json();
-  },
-  getFeed: async (): Promise<any[]> => {
-    const res = await fetch('/api/feed');
-    return res.json();
-  },
-  getStats: async (): Promise<Stats> => {
-    const res = await fetch('/api/stats');
-    return res.json();
+
+  getStats: async () => {
+    const [u, c, e] = await Promise.all([
+      supabase.from('users').select('*', { count: 'exact', head: true }),
+      supabase.from('clubs').select('*', { count: 'exact', head: true }),
+      supabase.from('events').select('*', { count: 'exact', head: true })
+    ]);
+    return { users: u.count || 0, clubs: c.count || 0, events: e.count || 0 };
   }
 };
