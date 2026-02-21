@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Heart, Users, Calendar, Briefcase, User, Menu, X, LogOut, LogIn, Rss, Zap } from 'lucide-react';
+import { Home, Heart, Users, Calendar, Briefcase, User, Menu, X, LogOut, LogIn, Rss } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import clsx from 'clsx';
 
 export default function Layout({ children, session }: { children: React.ReactNode, session: any }) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
   const navItems = [
@@ -22,61 +22,107 @@ export default function Layout({ children, session }: { children: React.ReactNod
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#fafafa' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--color-bg)' }}>
 
       {/* ── Navbar ── */}
       <motion.nav
-        initial={{ y: -64 }}
-        animate={{ y: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
         style={{
-          background: 'rgba(255,255,255,0.9)',
+          background: 'rgba(253,248,251,0.92)',
           backdropFilter: 'blur(20px)',
-          borderBottom: '1.5px solid #f0f0f8',
+          borderBottom: '1.5px solid #f0dce8',
           position: 'sticky', top: 0, zIndex: 50,
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: 64 }}>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2">
+            <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
               <motion.div
-                whileHover={{ rotate: 15, scale: 1.15 }}
+                whileHover={{ scale: 1.12, rotate: -8 }}
                 whileTap={{ scale: 0.9 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 14 }}
                 style={{
                   width: 36, height: 36, borderRadius: 10,
-                  background: 'linear-gradient(135deg, #ff2d78, #7c3aed)',
+                  background: 'linear-gradient(135deg, #7B2D8B, #C0476D)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: '0 4px 14px rgba(255,45,120,0.4)',
+                  boxShadow: '0 4px 16px rgba(123,45,139,0.35)',
+                  color: 'white', fontFamily: 'var(--font-display)', fontStyle: 'italic',
+                  fontWeight: 700, fontSize: '1.1rem',
                 }}
               >
-                <Zap className="w-5 h-5 text-white" fill="white" />
+                A
               </motion.div>
               <span style={{
-                fontFamily: 'var(--font-display)', fontWeight: 800,
-                fontSize: '1.4rem', letterSpacing: '-0.03em',
-                background: 'linear-gradient(135deg, #ff2d78, #7c3aed)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-              }}>adda</span>
+                fontFamily: 'var(--font-display)',
+                fontStyle: 'italic',
+                fontWeight: 700,
+                fontSize: '1.5rem',
+                letterSpacing: '-0.01em',
+                background: 'linear-gradient(135deg, #7B2D8B, #C0476D)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>
+                Adda
+              </span>
             </Link>
 
             {/* Desktop Nav */}
+            <div style={{ display: 'none' }} className="md:flex items-center gap-1">
+              <div className="hidden md:flex items-center gap-1">
+                {navItems.map((item) => (
+                  <motion.div key={item.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Link
+                      to={item.path}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '0.45rem 1rem',
+                        borderRadius: 9999,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        fontFamily: 'var(--font-sans)',
+                        textDecoration: 'none',
+                        transition: 'all 0.2s',
+                        ...(isActive(item.path) ? {
+                          background: 'linear-gradient(135deg, #f3e6f5, #fde8ef)',
+                          color: '#7B2D8B',
+                          fontWeight: 600,
+                        } : {
+                          color: '#7a5a7e',
+                        }),
+                      }}
+                    >
+                      <item.icon style={{ width: 15, height: 15 }} />
+                      {item.name}
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop Nav (proper flex for desktop) */}
             <div className="hidden md:flex items-center gap-1">
               {navItems.map((item) => (
-                <motion.div key={item.name} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div key={item.name + '-d'} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     to={item.path}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200"
-                    style={isActive(item.path) ? {
-                      background: 'linear-gradient(135deg, #fff0f5, #f5f0ff)',
-                      color: '#ff2d78',
-                    } : {
-                      color: '#6b6b8a',
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '0.45rem 0.9rem',
+                      borderRadius: 9999,
+                      fontSize: '0.875rem',
+                      fontWeight: isActive(item.path) ? 600 : 500,
+                      fontFamily: 'var(--font-sans)',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s',
+                      background: isActive(item.path) ? 'linear-gradient(135deg, #f3e6f5, #fde8ef)' : 'transparent',
+                      color: isActive(item.path) ? '#7B2D8B' : '#7a5a7e',
                     }}
                   >
-                    <item.icon className="w-4 h-4" />
+                    <item.icon style={{ width: 15, height: 15 }} />
                     {item.name}
                   </Link>
                 </motion.div>
@@ -87,31 +133,31 @@ export default function Layout({ children, session }: { children: React.ReactNod
             <div className="hidden md:flex items-center gap-3">
               {session ? (
                 <>
-                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                    <Link to="/profile">
+                  <motion.div whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.9 }}>
+                    <Link to="/profile" style={{ textDecoration: 'none' }}>
                       <div style={{
                         width: 36, height: 36, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #ff2d78, #7c3aed)',
+                        background: 'linear-gradient(135deg, #7B2D8B, #C0476D)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 2px 10px rgba(255,45,120,0.3)',
+                        boxShadow: '0 2px 10px rgba(123,45,139,0.3)',
                       }}>
-                        <User className="w-4 h-4 text-white" />
+                        <User style={{ width: 16, height: 16, color: 'white' }} />
                       </div>
                     </Link>
                   </motion.div>
                   <motion.button
                     whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                     onClick={() => supabase.auth.signOut()}
-                    style={{ color: '#a0a0b8', padding: '0.5rem', borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#b090b5', padding: 8, borderRadius: '50%' }}
                     title="Sign Out"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut style={{ width: 16, height: 16 }} />
                   </motion.button>
                 </>
               ) : (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Link to="/auth" className="btn-primary text-sm">
-                    <LogIn className="w-4 h-4" /> Sign In
+                <motion.div whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.95 }}>
+                  <Link to="/auth" className="btn-primary">
+                    <LogIn style={{ width: 15, height: 15 }} /> Sign In
                   </Link>
                 </motion.div>
               )}
@@ -120,51 +166,56 @@ export default function Layout({ children, session }: { children: React.ReactNod
             {/* Mobile toggle */}
             <motion.button
               whileTap={{ scale: 0.85 }}
-              className="md:hidden p-2 rounded-xl"
-              style={{ color: '#6b6b8a', border: 'none', background: 'transparent', cursor: 'pointer' }}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#7a5a7e', padding: 8 }}
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileOpen ? <X style={{ width: 22, height: 22 }} /> : <Menu style={{ width: 22, height: 22 }} />}
             </motion.button>
           </div>
         </div>
 
         {/* Mobile Menu */}
         <AnimatePresence>
-          {isMobileMenuOpen && (
+          {mobileOpen && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              style={{ borderTop: '1.5px solid #f0f0f8', background: 'white', overflow: 'hidden' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              style={{ borderTop: '1.5px solid #f0dce8', background: 'white', overflow: 'hidden' }}
             >
-              <div className="px-4 pt-3 pb-4 space-y-1">
+              <div style={{ padding: '12px 16px 16px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {navItems.map((item, i) => (
                   <motion.div
                     key={item.name}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -16 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.05 }}
                   >
                     <Link
                       to={item.path}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all"
-                      style={isActive(item.path) ? {
-                        background: 'linear-gradient(135deg, #fff0f5, #f5f0ff)',
-                        color: '#ff2d78',
-                      } : { color: '#6b6b8a' }}
+                      onClick={() => setMobileOpen(false)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '12px 16px', borderRadius: 14,
+                        textDecoration: 'none',
+                        fontFamily: 'var(--font-sans)', fontWeight: 500, fontSize: '0.9rem',
+                        background: isActive(item.path) ? 'linear-gradient(135deg,#f3e6f5,#fde8ef)' : 'transparent',
+                        color: isActive(item.path) ? '#7B2D8B' : '#7a5a7e',
+                        transition: 'all 0.15s',
+                      }}
                     >
-                      <item.icon className="w-5 h-5" />
+                      <item.icon style={{ width: 18, height: 18 }} />
                       {item.name}
                     </Link>
                   </motion.div>
                 ))}
                 {!session && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-                    <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)} className="btn-primary text-sm w-full justify-center mt-2">
-                      <LogIn className="w-4 h-4" /> Sign In
+                    <Link to="/auth" onClick={() => setMobileOpen(false)} className="btn-primary"
+                      style={{ marginTop: 8, justifyContent: 'center', width: '100%' }}>
+                      <LogIn style={{ width: 15, height: 15 }} /> Sign In
                     </Link>
                   </motion.div>
                 )}
@@ -174,26 +225,28 @@ export default function Layout({ children, session }: { children: React.ReactNod
         </AnimatePresence>
       </motion.nav>
 
-      {/* ── Main Content ── */}
+      {/* ── Page Content with transition ── */}
       <motion.main
         key={location.pathname}
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8"
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        style={{ flex: 1, maxWidth: 1280, width: '100%', margin: '0 auto', padding: '2rem 1rem' }}
+        className="sm:px-6 lg:px-8"
       >
         {children}
       </motion.main>
 
       {/* ── Footer ── */}
-      <footer style={{ borderTop: '1.5px solid #f0f0f8', background: 'white' }}>
+      <footer style={{ borderTop: '1.5px solid #f0dce8', background: 'white' }}>
         <div className="max-w-7xl mx-auto py-5 px-4 flex justify-between items-center">
-          <p className="text-sm" style={{ color: '#a0a0b8' }}>
-            © {new Date().getFullYear()} adda — made with 💖 for campus life
+          <p style={{ fontSize: '0.85rem', color: '#b090b5', fontFamily: 'var(--font-sans)' }}>
+            © {new Date().getFullYear()} Adda — made with 💜 for students
           </p>
-          <Link to="/admin-login" className="text-xs transition" style={{ color: '#e0e0f0' }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#ff2d78')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#e0e0f0')}
+          <Link to="/admin-login"
+            style={{ fontSize: '0.75rem', color: '#e0d0e8', textDecoration: 'none', transition: 'color 0.2s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#C0476D')}
+            onMouseLeave={e => (e.currentTarget.style.color = '#e0d0e8')}
           >
             Admin
           </Link>
