@@ -1,22 +1,153 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  
-  --color-primary: #ec4899; /* Pink-500 */
-  --color-primary-hover: #db2777; /* Pink-600 */
-  --color-secondary: #8b5cf6; /* Violet-500 */
-  --color-accent: #f43f5e; /* Rose-500 */
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand */
+  --color-brand:       #ff2d78;
+  --color-brand-hover: #e0195f;
+  --color-purple:      #8b5cf6;
+  --color-amber:       #f59e0b;
+  --color-teal:        #06d6a0;
+
+  /* Surfaces */
+  --color-bg:       #0a0a12;
+  --color-surface:  #12121f;
+  --color-surface2: #1a1a2e;
+  --color-border:   #ffffff14;
+
+  /* Text */
+  --color-text:     #f0f0f8;
+  --color-muted:    #7878a0;
 }
+
+/* ── Global ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background-color: #f8fafc; /* Slate-50 */
-  color: #0f172a; /* Slate-900 */
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
+  font-weight: 800;
 }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: #ffffff20; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #ffffff40; }
+
+/* ── Gradient text utility ── */
+.gradient-text {
+  background: linear-gradient(135deg, #ff2d78 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glow effects ── */
+.glow-pink  { box-shadow: 0 0 30px #ff2d7820, 0 0 60px #ff2d7808; }
+.glow-purple{ box-shadow: 0 0 30px #8b5cf620, 0 0 60px #8b5cf608; }
+
+/* ── Glass card ── */
+.glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ── Gradient border ── */
+.grad-border {
+  position: relative;
+  border-radius: 1rem;
+}
+.grad-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #ff2d78, #8b5cf6);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.grad-border:hover::before { opacity: 1; }
+
+/* ── Base card ── */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  transition: all 0.2s ease;
+}
+.card:hover {
+  border-color: #ffffff20;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 40px #00000040;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  background: linear-gradient(135deg, #ff2d78, #c026d3);
+  color: white;
+  font-weight: 700;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px #ff2d7840;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px #ff2d7860;
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.06);
+  color: var(--color-text);
+  font-weight: 600;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-border);
+  transition: all 0.2s;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+/* ── Input ── */
+.input {
+  background: var(--color-surface2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 0.875rem;
+  padding: 0.75rem 1rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input::placeholder { color: var(--color-muted); }
+.input:focus { border-color: #ff2d78; }
+
+/* ── Pill/Badge ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.pill-pink   { background: #ff2d7820; color: #ff6b9d; border: 1px solid #ff2d7840; }
+.pill-purple { background: #8b5cf620; color: #a78bfa; border: 1px solid #8b5cf640; }
+.pill-amber  { background: #f59e0b20; color: #fbbf24; border: 1px solid #f59e0b40; }
+.pill-teal   { background: #06d6a020; color: #34d399; border: 1px solid #06d6a040; }

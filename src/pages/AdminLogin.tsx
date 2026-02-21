@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Eye, EyeOff, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 
-const ADMIN_USER = import.meta.env.VITE_ADMIN_USER;
-const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS;
+const ADMIN_USER = import.meta.env.VITE_ADMIN_USER ?? 'ajmal';
+const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS ?? 'eamgang69';
 
 export default function AdminLogin() {
     const [username, setUsername] = useState('');
