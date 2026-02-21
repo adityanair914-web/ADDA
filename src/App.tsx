@@ -11,6 +11,13 @@ import Profile from './pages/Profile';
 import Feed from './pages/Feed';
 import Auth from './pages/Auth';
 import Admin from './pages/Admin';
+import AdminLogin from './pages/AdminLogin';
+
+/** Guard: only lets admin through if sessionStorage token is set */
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const isAdmin = sessionStorage.getItem('adda_admin') === 'true';
+  return isAdmin ? <>{children}</> : <Navigate to="/admin-login" replace />;
+}
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -18,9 +25,7 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession()
-      .then(({ data }) => {
-        setSession(data.session);
-      })
+      .then(({ data }) => setSession(data.session))
       .catch(console.error)
       .finally(() => setLoading(false));
 
@@ -33,7 +38,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
         <div style={{ width: 40, height: 40, border: '3px solid #ec4899', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
@@ -42,19 +47,37 @@ export default function App() {
 
   return (
     <Router>
-      <Layout session={session}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
-          <Route path="/connect" element={<Connect />} />
-          <Route path="/clubs" element={<Clubs />} />
-          <Route path="/hangouts" element={<Hangouts />} />
-          <Route path="/gigs" element={<Gigs />} />
-          <Route path="/profile" element={session ? <Profile /> : <Navigate to="/auth" />} />
-          <Route path="/feed" element={<Feed />} />
-          <Route path="/admin" element={<Admin />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        {/* ── Admin routes (outside normal Layout, no navbar) ── */}
+        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminGuard>
+              <Admin />
+            </AdminGuard>
+          }
+        />
+
+        {/* ── Public / student routes (with navbar Layout) ── */}
+        <Route
+          path="/*"
+          element={
+            <Layout session={session}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/auth" element={!session ? <Auth /> : <Navigate to="/" />} />
+                <Route path="/connect" element={<Connect />} />
+                <Route path="/clubs" element={<Clubs />} />
+                <Route path="/hangouts" element={<Hangouts />} />
+                <Route path="/gigs" element={<Gigs />} />
+                <Route path="/profile" element={session ? <Profile /> : <Navigate to="/auth" />} />
+                <Route path="/feed" element={<Feed />} />
+              </Routes>
+            </Layout>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
