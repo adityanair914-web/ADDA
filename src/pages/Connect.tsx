@@ -23,15 +23,11 @@ export default function Connect() {
   }, []);
 
   const loadConfessions = () => {
-    api.getConfessions().then(setConfessions);
+    api.getConfessions().then(setConfessions).catch(() => { });
   };
 
   const loadInbox = async () => {
-    // In a real app, this would be filtered by the logged-in user
-    // For now, we just fetch what the API returns (mocked to current user)
-    api.getBouquets().then(setBouquets);
-    // Since we don't have a way to match confessions by target user yet in mock, 
-    // we'll just show an empty list or a message
+    api.getBouquets().then(setBouquets).catch(() => { });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

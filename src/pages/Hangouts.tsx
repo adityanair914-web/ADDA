@@ -17,7 +17,7 @@ export default function Hangouts() {
   });
 
   useEffect(() => {
-    api.getEvents().then(setEvents);
+    api.getEvents().then(setEvents).catch(() => { });
   }, []);
 
   const handleCreateEvent = async (e: React.FormEvent) => {

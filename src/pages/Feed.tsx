@@ -12,7 +12,7 @@ export default function Feed() {
         api.getFeed().then(items => {
             setFeedItems(items);
             setLoading(false);
-        });
+        }).catch(() => setLoading(false));
     }, []);
 
     const getIcon = (type: string) => {

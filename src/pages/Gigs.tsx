@@ -13,7 +13,7 @@ export default function Gigs() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    api.getGigs().then(setGigs);
+    api.getGigs().then(setGigs).catch(() => { });
   }, []);
 
   const handleApply = async (e: React.FormEvent) => {

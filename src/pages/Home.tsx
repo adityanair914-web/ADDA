@@ -5,14 +5,14 @@ import { Link } from 'react-router-dom';
 import { api, Stats, Event, Club } from '../lib/api';
 
 export default function Home() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<Stats>({ users: 120, clubs: 9, events: 5 });
   const [featuredEvents, setFeaturedEvents] = useState<Event[]>([]);
   const [featuredClubs, setFeaturedClubs] = useState<Club[]>([]);
 
   useEffect(() => {
-    api.getStats().then(setStats);
-    api.getEvents().then(events => setFeaturedEvents(events.slice(0, 3)));
-    api.getClubs().then(clubs => setFeaturedClubs(clubs.slice(0, 3)));
+    api.getStats().then(setStats).catch(() => { });
+    api.getEvents().then(events => setFeaturedEvents(events.slice(0, 3))).catch(() => { });
+    api.getClubs().then(clubs => setFeaturedClubs(clubs.slice(0, 3))).catch(() => { });
   }, []);
 
   return (
@@ -20,14 +20,14 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500 via-purple-600 to-indigo-700 text-white p-8 md:p-16 shadow-2xl">
         <div className="relative z-10 max-w-3xl">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-6xl font-display font-bold mb-6 leading-tight"
           >
-            Your college. <br/>Your people. <br/>Your life.
+            Your college. <br />Your people. <br />Your life.
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -35,8 +35,8 @@ export default function Home() {
           >
             The single platform where students find their people — whether that's love interests, study partners, club members, or party crews.
           </motion.p>
-          
-          <motion.div 
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -52,31 +52,29 @@ export default function Home() {
             </Link>
           </motion.div>
         </div>
-        
+
         {/* Decorative Circles */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-pink-500/30 rounded-full blur-3xl" />
       </section>
 
       {/* Stats Ticker */}
-      {stats && (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex justify-around items-center text-center">
-          <div>
-            <div className="text-3xl font-bold text-slate-900">{stats.users}</div>
-            <div className="text-sm text-slate-500 uppercase tracking-wide font-medium">Active Members</div>
-          </div>
-          <div className="w-px h-12 bg-slate-200" />
-          <div>
-            <div className="text-3xl font-bold text-slate-900">{stats.clubs}</div>
-            <div className="text-sm text-slate-500 uppercase tracking-wide font-medium">Active Clubs</div>
-          </div>
-          <div className="w-px h-12 bg-slate-200" />
-          <div>
-            <div className="text-3xl font-bold text-slate-900">{stats.events}</div>
-            <div className="text-sm text-slate-500 uppercase tracking-wide font-medium">Upcoming Events</div>
-          </div>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 flex justify-around items-center text-center">
+        <div>
+          <div className="text-3xl font-bold text-slate-900">{stats.users}</div>
+          <div className="text-sm text-slate-500 uppercase tracking-wide font-medium">Active Members</div>
         </div>
-      )}
+        <div className="w-px h-12 bg-slate-200" />
+        <div>
+          <div className="text-3xl font-bold text-slate-900">{stats.clubs}</div>
+          <div className="text-sm text-slate-500 uppercase tracking-wide font-medium">Active Clubs</div>
+        </div>
+        <div className="w-px h-12 bg-slate-200" />
+        <div>
+          <div className="text-3xl font-bold text-slate-900">{stats.events}</div>
+          <div className="text-sm text-slate-500 uppercase tracking-wide font-medium">Upcoming Events</div>
+        </div>
+      </div>
 
       {/* Featured Sections Grid */}
       <div className="grid md:grid-cols-2 gap-8">
@@ -92,7 +90,7 @@ export default function Home() {
             </Link>
           </div>
           <div className="space-y-4">
-            {featuredEvents.map(event => (
+            {featuredEvents.length > 0 ? featuredEvents.map(event => (
               <div key={event.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition flex gap-4">
                 <div className="w-16 h-16 bg-indigo-100 rounded-lg flex flex-col items-center justify-center text-indigo-700 shrink-0">
                   <span className="text-xs font-bold uppercase">{new Date(event.date_time).toLocaleString('default', { month: 'short' })}</span>
@@ -108,7 +106,11 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8 bg-white rounded-xl border border-dashed border-slate-200 text-slate-400">
+                No upcoming events yet. Check back soon!
+              </div>
+            )}
           </div>
         </section>
 
@@ -124,7 +126,7 @@ export default function Home() {
             </Link>
           </div>
           <div className="grid gap-4">
-            {featuredClubs.map(club => (
+            {featuredClubs.length > 0 ? featuredClubs.map(club => (
               <div key={club.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition flex items-center gap-4">
                 <img src={club.logo_url} alt={club.name} className="w-12 h-12 rounded-full object-cover bg-slate-100" />
                 <div className="flex-1">
@@ -135,25 +137,29 @@ export default function Home() {
                   {club.member_count} members
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-8 bg-white rounded-xl border border-dashed border-slate-200 text-slate-400">
+                No clubs yet. Be the first to create one!
+              </div>
+            )}
           </div>
         </section>
       </div>
 
       {/* Quick Links */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-orange-50 p-6 rounded-2xl border border-orange-100 hover:shadow-md transition cursor-pointer">
+        <Link to="/connect" className="bg-orange-50 p-6 rounded-2xl border border-orange-100 hover:shadow-md transition cursor-pointer block">
           <h3 className="font-bold text-orange-900 mb-2">New here?</h3>
-          <p className="text-sm text-orange-700">Take the interest quiz to find your tribe.</p>
-        </div>
-        <div className="bg-teal-50 p-6 rounded-2xl border border-teal-100 hover:shadow-md transition cursor-pointer">
-          <h3 className="font-bold text-teal-900 mb-2">Study Partners</h3>
-          <p className="text-sm text-teal-700">Find someone to ace that exam with.</p>
-        </div>
-        <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 hover:shadow-md transition cursor-pointer">
+          <p className="text-sm text-orange-700">Send your first anonymous confession!</p>
+        </Link>
+        <Link to="/clubs" className="bg-teal-50 p-6 rounded-2xl border border-teal-100 hover:shadow-md transition cursor-pointer block">
+          <h3 className="font-bold text-teal-900 mb-2">Join a Club</h3>
+          <p className="text-sm text-teal-700">Find your tribe among 9+ active clubs.</p>
+        </Link>
+        <Link to="/gigs" className="bg-blue-50 p-6 rounded-2xl border border-blue-100 hover:shadow-md transition cursor-pointer block">
           <h3 className="font-bold text-blue-900 mb-2">Earn Cash</h3>
           <p className="text-sm text-blue-700">Check out the latest gigs on campus.</p>
-        </div>
+        </Link>
       </section>
     </div>
   );

@@ -6,7 +6,7 @@ export default function Profile() {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    api.getMe().then(setUser);
+    api.getMe().then(setUser).catch(() => { });
   }, []);
 
   if (!user) return <div>Loading...</div>;
@@ -32,11 +32,11 @@ export default function Profile() {
               Edit Profile
             </button>
           </div>
-          
+
           <div>
             <h1 className="text-2xl font-bold text-slate-900">{user.name}</h1>
             <p className="text-slate-500 mb-4">@{user.instagram_handle || 'username'}</p>
-            
+
             <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-6">
               <span className="flex items-center"><BriefcaseIcon className="w-4 h-4 mr-1" /> {user.department} • {user.year} Year</span>
               <span className="flex items-center"><MapPin className="w-4 h-4 mr-1" /> {user.hostel}</span>
@@ -55,7 +55,7 @@ export default function Profile() {
                   ))}
                 </div>
               </div>
-              
+
               {/* Stats Placeholder */}
               <div>
                 <h3 className="font-bold text-slate-900 mb-3">Activity</h3>

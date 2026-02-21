@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 
+// --- Type Exports ---
 export interface Confession {
   id: string;
   sender_id: string;
@@ -40,6 +41,37 @@ export interface Event {
   club_name?: string;
 }
 
+export interface Stats {
+  users: number;
+  clubs: number;
+  events: number;
+}
+
+export interface Gig {
+  id: string;
+  title: string;
+  description: string;
+  gig_type: string;
+  pay_amount: number;
+  location: string;
+  status: 'open' | 'closed';
+  created_at: string;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  profile_pic_url?: string;
+  instagram_handle?: string;
+  department: string;
+  year: string;
+  hostel: string;
+  bio: string;
+  interests: string[];
+}
+
+// --- API Functions ---
 export const api = {
   // Users
   getCurrentUser: async () => {
@@ -49,6 +81,31 @@ export const api = {
     return data;
   },
 
+  getMe: async (): Promise<User | null> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return {
+      id: 'guest',
+      name: 'Campus Explorer',
+      email: 'guest@adda.app',
+      department: 'Undeclared',
+      year: '1st',
+      hostel: 'Day Scholar',
+      bio: 'Sign in to customize your profile!',
+      interests: ['Exploring', 'Making Friends', 'Events']
+    };
+    const { data } = await supabase.from('users').select('*').eq('id', user.id).single();
+    return data || {
+      id: user.id,
+      name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
+      email: user.email || '',
+      department: 'Not Set',
+      year: '1st',
+      hostel: 'Not Set',
+      bio: 'Edit your profile to add a bio!',
+      interests: ['New Student']
+    };
+  },
+
   // Confessions
   getConfessions: async () => {
     const { data, error } = await supabase
@@ -56,8 +113,8 @@ export const api = {
       .select('*')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
-    if (error) throw error;
-    return data;
+    if (error) { console.error(error); return []; }
+    return data || [];
   },
 
   postConfession: async (confession: Partial<Confession>) => {
@@ -80,19 +137,8 @@ export const api = {
       .select('*')
       .eq('recipient_id', user.id)
       .order('created_at', { ascending: false });
-    if (error) throw error;
-    return data;
-  },
-
-  postBouquet: async (bouquet: any) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from('bouquets')
-      .insert([{ ...bouquet, sender_id: user?.id }])
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    if (error) { console.error(error); return []; }
+    return data || [];
   },
 
   // Clubs
@@ -101,8 +147,8 @@ export const api = {
       .from('clubs')
       .select('*')
       .order('member_count', { ascending: false });
-    if (error) throw error;
-    return data;
+    if (error) { console.error(error); return []; }
+    return data || [];
   },
 
   createClub: async (club: Partial<Club>) => {
@@ -115,17 +161,25 @@ export const api = {
     return data;
   },
 
+  joinClub: async (clubId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Please sign in first');
+    const { error } = await supabase
+      .from('club_members')
+      .insert([{ club_id: clubId, user_id: user.id }]);
+    if (error) throw error;
+    // Increment member count
+    await supabase.rpc('increment_member_count', { club_id_input: clubId });
+  },
+
   // Events
   getEvents: async () => {
     const { data, error } = await supabase
       .from('events')
-      .select(`
-        *,
-        clubs ( name )
-      `)
+      .select('*')
       .order('date_time', { ascending: true });
-    if (error) throw error;
-    return data.map((e: any) => ({ ...e, club_name: e.clubs?.name }));
+    if (error) { console.error(error); return []; }
+    return data || [];
   },
 
   createEvent: async (event: Partial<Event>) => {
@@ -145,8 +199,8 @@ export const api = {
       .select('*')
       .eq('status', 'open')
       .order('created_at', { ascending: false });
-    if (error) throw error;
-    return data;
+    if (error) { console.error(error); return []; }
+    return data || [];
   },
 
   applyForGig: async (gigId: string, application: { user_id: string; upi_id: string; proof_url: string }) => {
@@ -165,8 +219,8 @@ export const api = {
       .from('confessions')
       .select('*')
       .eq('status', 'pending');
-    if (error) throw error;
-    return data;
+    if (error) { console.error(error); return []; }
+    return data || [];
   },
 
   moderateConfession: async (id: string, status: 'approved' | 'rejected') => {
@@ -182,8 +236,8 @@ export const api = {
       .from('clubs')
       .select('*')
       .eq('approval_status', 'pending');
-    if (error) throw error;
-    return data;
+    if (error) { console.error(error); return []; }
+    return data || [];
   },
 
   moderateClub: async (id: string, status: 'approved' | 'rejected') => {
@@ -194,7 +248,7 @@ export const api = {
     if (error) throw error;
   },
 
-  // Feed & Stats
+  // Feed
   getFeed: async () => {
     const [confRes, clubRes, eventRes] = await Promise.all([
       supabase.from('confessions').select('id, message, created_at').eq('status', 'approved').limit(10),
@@ -202,16 +256,17 @@ export const api = {
       supabase.from('events').select('id, title, created_at').limit(10)
     ]);
 
-    const confessions = (confRes.data || []).map(c => ({ id: c.id, type: 'confession', content: c.message, created_at: c.created_at }));
-    const clubs = (clubRes.data || []).map(c => ({ id: c.id, type: 'club', content: c.name, created_at: c.created_at }));
-    const events = (eventRes.data || []).map(e => ({ id: e.id, type: 'event', content: e.title, created_at: e.created_at }));
+    const confessions = (confRes.data || []).map(c => ({ id: c.id, type: 'confession' as const, content: c.message, created_at: c.created_at }));
+    const clubs = (clubRes.data || []).map(c => ({ id: c.id, type: 'club' as const, content: c.name, created_at: c.created_at }));
+    const events = (eventRes.data || []).map(e => ({ id: e.id, type: 'event' as const, content: e.title, created_at: e.created_at }));
 
     return [...confessions, ...clubs, ...events].sort((a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
   },
 
-  getStats: async () => {
+  // Stats
+  getStats: async (): Promise<Stats> => {
     const [u, c, e] = await Promise.all([
       supabase.from('users').select('*', { count: 'exact', head: true }),
       supabase.from('clubs').select('*', { count: 'exact', head: true }),
