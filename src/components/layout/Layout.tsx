@@ -4,6 +4,7 @@ import { Home, Heart, Users, Calendar, Briefcase, User, Menu, X, LogOut, LogIn, 
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../../lib/supabase';
 import clsx from 'clsx';
+import CustomCursor from '../CustomCursor';
 
 export default function Layout({ children, session }: { children: React.ReactNode, session: any }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -22,7 +23,8 @@ export default function Layout({ children, session }: { children: React.ReactNod
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--color-bg)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--color-bg)', cursor: 'none' }}>
+      <CustomCursor />
 
       {/* ── Navbar ── */}
       <motion.nav
